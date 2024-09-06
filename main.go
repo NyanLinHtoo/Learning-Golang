@@ -4,7 +4,8 @@ import "fmt"
 
 func main() {
 	// variables()
-	printFormatString()
+	// printFormatString()
+	arrays()
 }
 
 func variables() {
@@ -56,3 +57,5 @@ func printFormatString() {
 	var str = fmt.Sprintf("My age is %v and my name is %v \n", age, name) // stored in a variable
 	fmt.Println("The save string: ", str)
 }
+
+func arrays() {}
