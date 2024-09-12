@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"sort"
 	"strings"
 )
@@ -12,7 +13,18 @@ func main() {
 	// arraysAndSlices()
 	// standardLibrary()
 	// loops()
-	booleanAndConditionals()
+	// booleanAndConditionals()
+
+	// Using Function
+	sayGreeting("nyan")
+	sayGreeting("lin")
+	sayBye("htoo")
+	cycleNames([]string{"Nyan", "Lin", "Htoo"}, sayGreeting)
+	cycleNames([]string{"Nyan", "Lin", "Htoo"}, sayBye)
+	a1 := circleArea(10.34)
+	a2 := circleArea(58.235)
+	fmt.Println(a1, a2)
+	fmt.Printf("Circle 1 is %0.3f and circle 2 is %0.3f", a1, a2)
 }
 
 func variables() {
@@ -171,5 +183,24 @@ func booleanAndConditionals() {
 		}
 		fmt.Printf("the value at pos %v is %v \n", index, value)
 	}
+}
 
+// one argument
+func sayGreeting(n string) {
+	fmt.Printf("Good Morning %v \n", n)
+}
+
+func sayBye(n string) {
+	fmt.Printf("GoodBye %v \n", n)
+}
+
+func circleArea(r float64) float64 {
+	return math.Pi * r * r
+}
+
+// Two argument
+func cycleNames(n []string, f func(string)) {
+	for _, v := range n {
+		f(v)
+	}
 }
