@@ -16,15 +16,25 @@ func main() {
 	// booleanAndConditionals()
 
 	// Using Function
-	sayGreeting("nyan")
-	sayGreeting("lin")
-	sayBye("htoo")
-	cycleNames([]string{"Nyan", "Lin", "Htoo"}, sayGreeting)
-	cycleNames([]string{"Nyan", "Lin", "Htoo"}, sayBye)
-	a1 := circleArea(10.34)
-	a2 := circleArea(58.235)
-	fmt.Println(a1, a2)
-	fmt.Printf("Circle 1 is %0.3f and circle 2 is %0.3f", a1, a2)
+	// sayGreeting("nyan")
+	// sayGreeting("lin")
+	// sayBye("htoo")
+	// cycleNames([]string{"Nyan", "Lin", "Htoo"}, sayGreeting)
+	// cycleNames([]string{"Nyan", "Lin", "Htoo"}, sayBye)
+	// a1 := circleArea(10.34)
+	// a2 := circleArea(58.235)
+	// fmt.Println(a1, a2)
+	// fmt.Printf("Circle 1 is %0.3f and circle 2 is %0.3f", a1, a2)
+
+	// Return Multiple Values
+	fn1, sn1 := getInitials("nick thomas")
+	fmt.Println(fn1, sn1)
+
+	fn2, sn2 := getInitials("Juliet thomas")
+	fmt.Println(fn2, sn2)
+
+	fn3, sn3 := getInitials("Monyoe")
+	fmt.Println(fn3, sn3)
 }
 
 func variables() {
@@ -203,4 +213,20 @@ func cycleNames(n []string, f func(string)) {
 	for _, v := range n {
 		f(v)
 	}
+}
+
+func getInitials(n string) (string, string) {
+	s := strings.ToUpper(n)
+	names := strings.Split(s, " ")
+
+	var initials []string
+	for _, v := range names {
+		initials = append(initials, v[:1])
+	}
+
+	if len(initials) > 1 {
+		return initials[0], initials[1]
+	}
+
+	return initials[0], "_"
 }
