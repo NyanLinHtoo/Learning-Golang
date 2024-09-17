@@ -45,7 +45,10 @@ func main() {
 	// }
 	// showScore()
 
-	maps()
+	// maps()
+
+	// Pass by Values
+	passByValues()
 }
 
 func variables() {
