@@ -1,5 +1,6 @@
 package main
 
+// declare Custom Types
 type bill struct {
 	name  string
 	items map[string]float64
