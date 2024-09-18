@@ -49,6 +49,10 @@ func main() {
 	// pointer()
 
 	// Structs and Custom Types
+	// myBill := newBill("Nyan's Bill")
+	// fmt.Println(myBill)
+
+	// Receiver Function
 	myBill := newBill("Nyan's Bill")
-	fmt.Println(myBill)
+	fmt.Println(myBill.format())
 }
