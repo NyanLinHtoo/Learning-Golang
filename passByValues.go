@@ -32,5 +32,26 @@ func passByValues() {
 	// Changed values
 	updateMenu(menu)
 	fmt.Println(menu)
+}
 
+func updateNameUsingPointer(x *string) {
+	*x = "Juliet" // *x means the value of pointer "x"
+}
+
+func pointer() {
+	name := "Nick"
+
+	// updateNameUsingPointer(name)
+	// fmt.Println(name)
+
+	// fmt.Println("The memory address of name : ", &name)
+
+	// (&) => memory location of pointer
+	m := &name
+	fmt.Println("Memory address : ", m)
+
+	fmt.Println("Value of Pointer :", *m)
+
+	updateNameUsingPointer(m)
+	fmt.Println(name) // Nick => Juliet (changed) => That means Group A types can be changed directly using the pointer's value.
 }

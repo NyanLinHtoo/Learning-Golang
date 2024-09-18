@@ -48,7 +48,10 @@ func main() {
 	// maps()
 
 	// Pass by Values
-	passByValues()
+	// passByValues()
+
+	// Pointer
+	pointer()
 }
 
 func variables() {
