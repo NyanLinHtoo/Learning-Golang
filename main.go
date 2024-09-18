@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 var score = 99.556
 
 func main() {
@@ -45,4 +47,8 @@ func main() {
 
 	// Pointer
 	// pointer()
+
+	// Structs and Custom Types
+	myBill := newBill("Nyan's Bill")
+	fmt.Println(myBill)
 }
