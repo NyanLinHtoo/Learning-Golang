@@ -54,5 +54,12 @@ func main() {
 
 	// Receiver Function
 	myBill := newBill("Nyan's Bill")
+
+	myBill.addItems("cake", 5.66)
+	myBill.addItems("coffee", 47.66)
+	myBill.addItems("coke", 9.66)
+
+	myBill.updateTip(10)
+
 	fmt.Println(myBill.format())
 }
