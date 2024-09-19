@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 var score = 99.556
 
 func main() {
@@ -53,13 +51,18 @@ func main() {
 	// fmt.Println(myBill)
 
 	// Receiver Function
-	myBill := newBill("Nyan's Bill")
+	// myBill := newBill("Nyan's Bill")
 
-	myBill.addItems("cake", 5.66)
-	myBill.addItems("coffee", 47.66)
-	myBill.addItems("coke", 9.66)
+	// myBill.addItems("cake", 5.66)
+	// myBill.addItems("coffee", 47.66)
+	// myBill.addItems("coke", 9.66)
 
-	myBill.updateTip(10)
+	// myBill.updateTip(10)
 
-	fmt.Println(myBill.format())
+	// fmt.Println(myBill.format())
+
+	// UserInput
+	mybill := createBill()
+	// fmt.Println(mybill)
+	promptOpt(mybill)
 }
