@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 var score = 99.556
 
 func main() {
@@ -62,7 +64,20 @@ func main() {
 	// fmt.Println(myBill.format())
 
 	// UserInput
-	mybill := createBill()
+	// mybill := createBill()
 	// fmt.Println(mybill)
-	promptOpt(mybill)
+	// promptOpt(mybill)
+
+	// Interfaces
+	shapes := []shape{
+		square{length: 15.2},
+		circle{radius: 3.5},
+		circle{radius: 9.5},
+		square{length: 19.2},
+	}
+
+	for _, v := range shapes {
+		printShapeInfo(v)
+		fmt.Println("----")
+	}
 }
