@@ -80,5 +80,7 @@ func main() {
 	// }
 
 	// Bitwise Operation
-	bitwiseOperations()
+	// bitwiseOperations()
+
+	// testingGoMod()
 }
