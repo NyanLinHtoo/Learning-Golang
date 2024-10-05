@@ -1,8 +1,6 @@
 package main
 
 import (
-	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -31,22 +29,35 @@ func loadPage(title string) (*Page, error) {
 
 var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
 
-func getTitle(w http.ResponseWriter, r *http.Request) (string, error) {
-	m := validPath.FindStringSubmatch(r.URL.Path)
-	if m == nil {
-		http.NotFound(w, r)
-		return "", errors.New("invalid Page Title")
+// func getTitle(w http.ResponseWriter, r *http.Request) (string, error) {
+// 	m := validPath.FindStringSubmatch(r.URL.Path)
+// 	if m == nil {
+// 		http.NotFound(w, r)
+// 		return "", errors.New("invalid Page Title")
+// 	}
+// 	fmt.Println("m : ", m)
+// 	return m[2], nil // The title is the second subexpression.
+// }
+
+func makeHandle(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Here we will extract the page title from the Request,
+		// and call the provided handler 'fn'
+		m := validPath.FindStringSubmatch(r.URL.Path)
+		if m == nil {
+			http.NotFound(w, r)
+			return
+		}
+		fn(w, r, m[2])
 	}
-	fmt.Println("m : ", m)
-	return m[2], nil // The title is the second subexpression.
 }
 
-func viewHandler(w http.ResponseWriter, r *http.Request) {
+func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
 	// title := r.URL.Path[len("/view/"):]
-	title, err := getTitle(w, r)
-	if err != nil {
-		return
-	}
+	// title, err := getTitle(w, r)
+	// if err != nil {
+	// 	return
+	// }
 	p, err := loadPage(title)
 	if err != nil {
 		// if in "/view/" page is not found, redirect to existing page to edit route
@@ -56,12 +67,12 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "view", p)
 }
 
-func editHandler(w http.ResponseWriter, r *http.Request) {
+func editHandler(w http.ResponseWriter, r *http.Request, title string) {
 	// title := r.URL.Path[len("/edit/"):]
-	title, err := getTitle(w, r)
-	if err != nil {
-		return
-	}
+	// title, err := getTitle(w, r)
+	// if err != nil {
+	// 	return
+	// }
 	p, err := loadPage(title)
 	if err != nil {
 		p = &Page{Title: title}
@@ -69,16 +80,16 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "edit", p)
 }
 
-func saveHandler(w http.ResponseWriter, r *http.Request) {
+func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 	// title := r.URL.Path[len("/save/"):]
-	title, err := getTitle(w, r)
-	if err != nil {
-		return
-	}
+	// title, err := getTitle(w, r)
+	// if err != nil {
+	// 	return
+	// }
 	//  FormValue calls Request.ParseMultipartForm and Request.ParseForm if necessary and ignores any errors returned by these functions. If key is not present, FormValue returns the empty string. To access multiple values of the same key, call ParseForm and then inspect [Request.Form] directly.
 	body := r.FormValue("body")
 	p := &Page{Title: title, Body: []byte(body)}
-	err = p.save()
+	err := p.save()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -102,8 +113,8 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 }
 
 func main() {
-	http.HandleFunc("/view/", viewHandler)
-	http.HandleFunc("/edit/", editHandler)
-	http.HandleFunc("/save/", saveHandler)
+	http.HandleFunc("/view/", makeHandle(viewHandler))
+	http.HandleFunc("/edit/", makeHandle(editHandler))
+	http.HandleFunc("/save/", makeHandle(saveHandler))
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
