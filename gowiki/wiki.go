@@ -59,16 +59,19 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/view/"+title, http.StatusFound)
 }
 
+var templates = template.Must(template.ParseFiles("edit.html", "view.html"))
+
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
-	t, err := template.ParseFiles(tmpl + ".html")
+	// t, err := template.ParseFiles(tmpl + ".html")
+	err := templates.ExecuteTemplate(w, tmpl+"html", p)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = t.Execute(w, p)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
+	// err = t.Execute(w, p)
+	// if err != nil {
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// }
 }
 
 func main() {
