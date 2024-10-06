@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -15,15 +16,38 @@ type Page struct {
 
 func (p *Page) save() error {
 	filename := p.Title + ".txt"
-	return os.WriteFile(filename, p.Body, 0600)
+	fmt.Println("Saving page:", p.Title)                                // Debug print
+	fmt.Printf("Page content before processing:\n%s\n", string(p.Body)) // Debug print
+	createWikiPageLink(p)
+	fmt.Printf("Page content after processing:\n%s\n", string(p.Body)) // Debug print
+
+	return os.WriteFile("./data/"+filename, p.Body, 0600)
+}
+
+func createWikiPageLink(p *Page) {
+	fmt.Println("Processing page:", p.Title)
+	var linkPattern = regexp.MustCompile(`\[([a-zA-Z0-9]+)\]`)
+	fmt.Printf("Found : %v \n", linkPattern) // Debug print
+	bodyString := string(p.Body)
+	fmt.Printf("Found : %v \n", bodyString) // Debug print
+	matches := linkPattern.FindAll([]byte(bodyString), -1)
+	fmt.Printf("Found %d matches\n", len(matches)) // Debug print
+
+	p.Body = linkPattern.ReplaceAllFunc(p.Body, func(match []byte) []byte {
+		group := linkPattern.ReplaceAllString(string(match), "$1")
+		fmt.Println("Found group:", string(group))
+		return []byte(fmt.Sprintf("<a href='/view/%s'>%s</a>", group, group))
+	})
+	fmt.Println("Finished processing page:", p.Title)
 }
 
 func loadPage(title string) (*Page, error) {
 	filename := title + ".txt"
-	body, err := os.ReadFile(filename)
+	body, err := os.ReadFile("./data/" + filename)
 	if err != nil {
 		return nil, err
 	}
+
 	return &Page{Title: title, Body: body}, nil
 }
 
@@ -43,7 +67,9 @@ func makeHandle(fn func(http.ResponseWriter, *http.Request, string)) http.Handle
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Here we will extract the page title from the Request,
 		// and call the provided handler 'fn'
+
 		m := validPath.FindStringSubmatch(r.URL.Path)
+
 		if m == nil {
 			http.NotFound(w, r)
 			return
@@ -88,6 +114,8 @@ func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 	// }
 	//  FormValue calls Request.ParseMultipartForm and Request.ParseForm if necessary and ignores any errors returned by these functions. If key is not present, FormValue returns the empty string. To access multiple values of the same key, call ParseForm and then inspect [Request.Form] directly.
 	body := r.FormValue("body")
+
+	fmt.Printf("Received body content:\n%s\n", body) // Debug print
 	p := &Page{Title: title, Body: []byte(body)}
 	err := p.save()
 	if err != nil {
@@ -97,7 +125,7 @@ func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 	http.Redirect(w, r, "/view/"+title, http.StatusFound)
 }
 
-var templates = template.Must(template.ParseFiles("edit.html", "view.html"))
+var templates = template.Must(template.ParseFiles("./tmpl/edit.html", "./tmpl/view.html"))
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 	// t, err := template.ParseFiles(tmpl + ".html")
@@ -112,7 +140,12 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 	// }
 }
 
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "/view/FrontPage", http.StatusFound)
+}
+
 func main() {
+	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/view/", makeHandle(viewHandler))
 	http.HandleFunc("/edit/", makeHandle(editHandler))
 	http.HandleFunc("/save/", makeHandle(saveHandler))
