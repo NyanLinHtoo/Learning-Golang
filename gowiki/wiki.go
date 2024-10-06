@@ -1,12 +1,11 @@
 package main
 
 import (
-	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"regexp"
-	"text/template"
 )
 
 type Page struct {
@@ -14,31 +13,19 @@ type Page struct {
 	Body  []byte
 }
 
-func (p *Page) save() error {
-	filename := p.Title + ".txt"
-	fmt.Println("Saving page:", p.Title)                                // Debug print
-	fmt.Printf("Page content before processing:\n%s\n", string(p.Body)) // Debug print
-	createWikiPageLink(p)
-	fmt.Printf("Page content after processing:\n%s\n", string(p.Body)) // Debug print
-
-	return os.WriteFile("./data/"+filename, p.Body, 0600)
+// Function to treat content as safe HTML
+func safeHTML(content []byte) template.HTML {
+	return template.HTML(content) // Marks content as safe HTML
 }
 
-func createWikiPageLink(p *Page) {
-	fmt.Println("Processing page:", p.Title)
-	var linkPattern = regexp.MustCompile(`\[([a-zA-Z0-9]+)\]`)
-	fmt.Printf("Found : %v \n", linkPattern) // Debug print
-	bodyString := string(p.Body)
-	fmt.Printf("Found : %v \n", bodyString) // Debug print
-	matches := linkPattern.FindAll([]byte(bodyString), -1)
-	fmt.Printf("Found %d matches\n", len(matches)) // Debug print
+// Use html/template package for rendering HTML templates
+var templates = template.Must(template.New("").Funcs(template.FuncMap{
+	"safeHTML": safeHTML,
+}).ParseFiles("./tmpl/edit.html", "./tmpl/view.html"))
 
-	p.Body = linkPattern.ReplaceAllFunc(p.Body, func(match []byte) []byte {
-		group := linkPattern.ReplaceAllString(string(match), "$1")
-		fmt.Println("Found group:", string(group))
-		return []byte(fmt.Sprintf("<a href='/view/%s'>%s</a>", group, group))
-	})
-	fmt.Println("Finished processing page:", p.Title)
+func (p *Page) save() error {
+	filename := p.Title + ".txt"
+	return os.WriteFile("./data/"+filename, p.Body, 0600)
 }
 
 func loadPage(title string) (*Page, error) {
@@ -51,25 +38,24 @@ func loadPage(title string) (*Page, error) {
 	return &Page{Title: title, Body: body}, nil
 }
 
-var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
+func createWikiPageLink(p *Page) {
+	// Regular expression to match [PageName]
+	wikiLinkRegex := regexp.MustCompile(`\[([a-zA-Z0-9]+)\]`)
 
-// func getTitle(w http.ResponseWriter, r *http.Request) (string, error) {
-// 	m := validPath.FindStringSubmatch(r.URL.Path)
-// 	if m == nil {
-// 		http.NotFound(w, r)
-// 		return "", errors.New("invalid Page Title")
-// 	}
-// 	fmt.Println("m : ", m)
-// 	return m[2], nil // The title is the second subexpression.
-// }
+	// Replace each [PageName] with an <a> tag linking to the corresponding page
+	p.Body = wikiLinkRegex.ReplaceAllFunc(p.Body, func(match []byte) []byte {
+		// Extract the page name (e.g., "PageName" from "[PageName]")
+		pageName := match[1 : len(match)-1]
+		// Create the replacement link: <a href="/view/PageName">PageName</a>
+		link := []byte(`<a href="/view/` + string(pageName) + `">` + string(pageName) + `</a>`)
+		return link
+	})
+}
 
 func makeHandle(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Here we will extract the page title from the Request,
-		// and call the provided handler 'fn'
-
+		var validPath = regexp.MustCompile("^/(edit|save|view)/([a-zA-Z0-9]+)$")
 		m := validPath.FindStringSubmatch(r.URL.Path)
-
 		if m == nil {
 			http.NotFound(w, r)
 			return
@@ -79,26 +65,17 @@ func makeHandle(fn func(http.ResponseWriter, *http.Request, string)) http.Handle
 }
 
 func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
-	// title := r.URL.Path[len("/view/"):]
-	// title, err := getTitle(w, r)
-	// if err != nil {
-	// 	return
-	// }
 	p, err := loadPage(title)
 	if err != nil {
-		// if in "/view/" page is not found, redirect to existing page to edit route
+		// If in "/view/" page is not found, redirect to existing page to edit route
 		http.Redirect(w, r, "/edit/"+title, http.StatusFound)
 		return
 	}
+	createWikiPageLink(p)
 	renderTemplate(w, "view", p)
 }
 
 func editHandler(w http.ResponseWriter, r *http.Request, title string) {
-	// title := r.URL.Path[len("/edit/"):]
-	// title, err := getTitle(w, r)
-	// if err != nil {
-	// 	return
-	// }
 	p, err := loadPage(title)
 	if err != nil {
 		p = &Page{Title: title}
@@ -107,16 +84,12 @@ func editHandler(w http.ResponseWriter, r *http.Request, title string) {
 }
 
 func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
-	// title := r.URL.Path[len("/save/"):]
-	// title, err := getTitle(w, r)
-	// if err != nil {
-	// 	return
-	// }
-	//  FormValue calls Request.ParseMultipartForm and Request.ParseForm if necessary and ignores any errors returned by these functions. If key is not present, FormValue returns the empty string. To access multiple values of the same key, call ParseForm and then inspect [Request.Form] directly.
+	// FormValue calls Request.ParseMultipartForm and Request.ParseForm if necessary
 	body := r.FormValue("body")
 
-	fmt.Printf("Received body content:\n%s\n", body) // Debug print
+	// fmt.Printf("Received body content:\n%s\n", body) // Debug print
 	p := &Page{Title: title, Body: []byte(body)}
+	createWikiPageLink(p)
 	err := p.save()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -125,19 +98,20 @@ func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 	http.Redirect(w, r, "/view/"+title, http.StatusFound)
 }
 
-var templates = template.Must(template.ParseFiles("./tmpl/edit.html", "./tmpl/view.html"))
-
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
-	// t, err := template.ParseFiles(tmpl + ".html")
-	err := templates.ExecuteTemplate(w, tmpl+".html", p)
+	// Convert the Body to a string before passing it to the template
+	data := struct {
+		Title string
+		Body  string
+	}{
+		Title: p.Title,
+		Body:  string(p.Body),
+	}
+	err := templates.ExecuteTemplate(w, tmpl+".html", data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	// err = t.Execute(w, p)
-	// if err != nil {
-	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-	// }
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) {
