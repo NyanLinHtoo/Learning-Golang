@@ -9,5 +9,6 @@ func main() {
 	// goSelect()
 	// goTimeout()
 	// goNonBlockingChannel()
-	goClosingChannel()
+	// goClosingChannel()
+	goRangeOverChannel()
 }
