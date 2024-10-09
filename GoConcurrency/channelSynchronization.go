@@ -18,5 +18,5 @@ func channelSynchronization() {
 	go worker(done)
 
 	// if "<-done" is not include, program will done before start worker
-	<-done
+	<-done // wait
 }

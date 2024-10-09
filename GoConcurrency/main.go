@@ -10,5 +10,9 @@ func main() {
 	// goTimeout()
 	// goNonBlockingChannel()
 	// goClosingChannel()
-	goRangeOverChannel()
+	// goRangeOverChannel()
+	// goTimers()
+	// goTicker()
+	// goWorkerPool()
+	goWaitGroup()
 }
